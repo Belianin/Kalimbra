@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kalimbra", "Kalimbra\Kalimbra.csproj", "{5BC7DA9B-D7DF-4A1A-98ED-4F8CBAB0F27B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kalimbra.App", "Kalimbra.App\Kalimbra.App.csproj", "{899F4232-2079-495A-8B4A-19C92E53A7D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{5BC7DA9B-D7DF-4A1A-98ED-4F8CBAB0F27B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5BC7DA9B-D7DF-4A1A-98ED-4F8CBAB0F27B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5BC7DA9B-D7DF-4A1A-98ED-4F8CBAB0F27B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{899F4232-2079-495A-8B4A-19C92E53A7D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{899F4232-2079-495A-8B4A-19C92E53A7D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{899F4232-2079-495A-8B4A-19C92E53A7D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{899F4232-2079-495A-8B4A-19C92E53A7D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
