@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.Win32.SafeHandles;
 
 namespace Kalimbra.App
 {
@@ -29,7 +30,8 @@ namespace Kalimbra.App
         public MainWindow()
         {
             InitializeComponent();
-
+            PlayNew();
+            Application.Current.Shutdown();
             //PlaySound(440f);
             // var cts = new CancellationTokenSource();
             // Task.Run(() => PlayMelody(cts.Token, 440f, 500));
@@ -39,7 +41,24 @@ namespace Kalimbra.App
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.Key == Key.Space)
-                PlaySound(2000f);
+            {
+                PlayNew();
+            }
+        }
+
+        private void PlayNew()
+        {
+            var generator = new MelodyGenerator(new RandomDurationGenerator());
+            var melody = generator.Generate(Gammas.CMaj, 10);
+
+            using var memoryStream = File.OpenWrite("temp.wav");
+            using var binaryWriter = new BinaryWriter(memoryStream);
+            var recorder = new WaveRecorder();
+            
+            recorder.Record(binaryWriter, melody);
+            //memoryStream.Position = 0;
+            
+            //new SoundPlayer(memoryStream).Play();
         }
 
         private async Task PlayMelody(CancellationToken token, float frequency, int duration)
@@ -60,7 +79,7 @@ namespace Kalimbra.App
                 var binaryWave = new byte[SAMPLE_RATE * sizeof(short)];
                 for (int i = 0; i < SAMPLE_RATE; i++)
                 {
-                    wave[i] = Convert.ToInt16(frequency); //Convert.ToInt16(short.MaxValue * Math.Sin(((Math.PI * 2 * frequency) / SAMPLE_RATE) * i));
+                    wave[i] = Convert.ToInt16(short.MaxValue * Math.Sin(((Math.PI * 2 * frequency) / SAMPLE_RATE) * i));
                 }
                 Buffer.BlockCopy(wave, 0, binaryWave, 0, wave.Length * sizeof(short));
                 using (var memoryStream = new MemoryStream())
@@ -68,21 +87,24 @@ namespace Kalimbra.App
                 {
                     var blockAlign = BITS_PER_SAMPLE / 8;
                     var subChunkTwoSize = SAMPLE_RATE * blockAlign;
-                    binaryWriter.Write(new [] {'R', 'I', 'F', 'F'});
+                    
+                    binaryWriter.Write(Encoding.ASCII.GetBytes("RIFF"));
                     binaryWriter.Write(36 + subChunkTwoSize);
-                    binaryWriter.Write(new[] {'W', 'A', 'V', 'E', 'f', 'm', 't', ' '});
+                    binaryWriter.Write(Encoding.ASCII.GetBytes("WAVEfmt "));
                     binaryWriter.Write(16);
                     binaryWriter.Write((short) 1);
                     binaryWriter.Write((short) 1);
                     binaryWriter.Write(SAMPLE_RATE);
                     binaryWriter.Write(SAMPLE_RATE * blockAlign);
-                    binaryWriter.Write(blockAlign);
-                    binaryWriter.Write(BITS_PER_SAMPLE);
+                    binaryWriter.Write((short) blockAlign);
+                    binaryWriter.Write((short) BITS_PER_SAMPLE);
                     binaryWriter.Write(new[] {'d', 'a', 't', 'a'});
                     binaryWriter.Write(subChunkTwoSize);
                     binaryWriter.Write(binaryWave);
                     memoryStream.Position = 0;
-                    new SoundPlayer(memoryStream).Play();
+                    var player = new SoundPlayer(memoryStream);
+                    player.Load();
+                    player.PlaySync();
                 }
             }
             catch (Exception e)
