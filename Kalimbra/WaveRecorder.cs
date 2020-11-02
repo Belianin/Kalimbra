@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Kalimbra
@@ -10,12 +11,37 @@ namespace Kalimbra
         private const int SAMPLE_RATE = 44100;
         private const short BITS_PER_SAMPLE = 16;
         
-        public void Record(BinaryWriter binaryWriter, Melody melody)
+        public void Record(BinaryWriter binaryWriter, Melody[] melody)
         {
-            var payload = GetPayloadBites(melody);
+            var melodies = melody.Select(GetPayloadBites).ToArray();
+            var payload = new long[melodies.Max(m => m.Length)];
+            long max = 0;
+            for (int i = 0; i < payload.Length; i++)
+            {
+                //var count = 0;
+                var l = 0L;
+                foreach (var m in melodies)
+                {
+                    if (i < m.Length)
+                    {
+                        //count++;
+                        l += m[i];
+                    }
+                }
+                
+                if (l > max)
+                    max = l;
+                payload[i] = l; //(l / count);
+            }
+
+            var normalized = new byte[payload.Length];
+            for (int i = 0; i < payload.Length; i++)
+            {
+                normalized[i] = (byte) (payload[i] * (payload[i] / (double) max));
+            }
             
             var blockAlign = BITS_PER_SAMPLE / 8;
-            var subChunkTwoSize = blockAlign * payload.Length;
+            var subChunkTwoSize = blockAlign * normalized.Length;
 
             binaryWriter.Write(Encoding.ASCII.GetBytes("RIFF"));
             binaryWriter.Write(36 + subChunkTwoSize);
@@ -29,42 +55,40 @@ namespace Kalimbra
             binaryWriter.Write((short) BITS_PER_SAMPLE);
             binaryWriter.Write(Encoding.ASCII.GetBytes("data"));
             binaryWriter.Write(subChunkTwoSize);
-            binaryWriter.Write(payload);
+            binaryWriter.Write(normalized);
         }
 
         private byte[] GetPayloadBites(Melody melody)
         {
-            var notes = new List<short>();
-            foreach (var note in melody.Notes)
-            {
-                var duration = SAMPLE_RATE / ((int) note.Duration * (melody.Bpm / 60));
-                var wave = new short[duration];
-                for (int i = 0; i < duration; i++)
-                {
-                    wave[i] = Convert.ToInt16(short.MaxValue * Math.Sin(((Math.PI * 2 * note.Frequency) / duration) * i));
-                }
-                notes.AddRange(wave);
-            }
+            var wave = PlaySineWave(melody);
+            var binaryWave = new byte[wave.Length * sizeof(short)];
 
-            var totalWave = notes.ToArray();
-            var binaryWave = new byte[totalWave.Length * sizeof(short)];
-
-            Buffer.BlockCopy(totalWave, 0, binaryWave, 0, totalWave.Length * sizeof(short));
+            Buffer.BlockCopy(wave, 0, binaryWave, 0, wave.Length * sizeof(short));
 
             return binaryWave;
         }
 
-        private byte[] GetTemporaryPayload()
+        private short[] PlaySineWave(Melody melody)
         {
-            var wave = new short[SAMPLE_RATE];
-            var binaryWave = new byte[SAMPLE_RATE * sizeof(short)];
-            for (int i = 0; i < SAMPLE_RATE; i++)
+            var length = melody.Notes.Sum(n => GetNoteDuration(n, melody.Bpm));
+            var wave = new short[length];
+            var i = 0;
+            foreach (var note in melody.Notes)
             {
-                wave[i] = Convert.ToInt16(short.MaxValue * Math.Sin(((Math.PI * 2 * 440f) / SAMPLE_RATE) * i));
+                var duration = GetNoteDuration(note, melody.Bpm);
+                for (int j = 0; j < duration; j++)
+                {
+                    wave[i] = Convert.ToInt16((short.MaxValue / 2) * Math.Sin(((Math.PI * 2 * note.Frequency) / SAMPLE_RATE) * i)+ short.MaxValue / 2);
+                    i++;
+                }
             }
-            Buffer.BlockCopy(wave, 0, binaryWave, 0, wave.Length * sizeof(short));
 
-            return binaryWave;
+            return wave;
+        }
+
+        private int GetNoteDuration(Note note, int bpm)
+        {
+            return SAMPLE_RATE / (int) note.Duration;// * (bpm / 60));
         }
     }
 }

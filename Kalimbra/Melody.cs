@@ -9,7 +9,7 @@ namespace Kalimbra
         public readonly Note[] Notes;
         public int Bpm { get; }
 
-        public Melody(IEnumerable<Note> notes, int bpm = 180)
+        public Melody(IEnumerable<Note> notes, int bpm = 100)
         {
             Bpm = bpm;
             this.Notes = notes.ToArray();

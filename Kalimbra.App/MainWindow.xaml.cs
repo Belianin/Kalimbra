@@ -56,24 +56,25 @@ namespace Kalimbra.App
                 NoteDuration.Quarter,
                 NoteDuration.Quarter,
                 NoteDuration.Quarter,
-                NoteDuration.Quarter,
-                NoteDuration.Eighth,
-                NoteDuration.Eighth,
-                NoteDuration.Eighth,
-                NoteDuration.Eighth,
-                NoteDuration.Eighth,
-                NoteDuration.Eighth,
-                NoteDuration.Eighth,
-                NoteDuration.Eighth,
+                NoteDuration.Quarter
             };
             var generator = new MelodyGenerator(new RandomDurationGenerator(durations: durations));
-            var melody = generator.Generate(Gammas.CMaj, 20);
+            var melody = generator.Generate(Gammas.CMaj5, 40);
+
+            var bassDurations = new[]
+            {
+                NoteDuration.Whole,
+                NoteDuration.Half,
+                NoteDuration.Half,
+            };
+            var bassGenerator = new MelodyGenerator(new RandomDurationGenerator(durations: bassDurations));
+            var bass = bassGenerator.Generate(Gammas.CMaj2, 40);
 
             using var memoryStream = File.OpenWrite("temp.wav");
             using var binaryWriter = new BinaryWriter(memoryStream);
             var recorder = new WaveRecorder();
             
-            recorder.Record(binaryWriter, melody);
+            recorder.Record(binaryWriter, new [] {melody, bass});
             //memoryStream.Position = 0;
             
             //new SoundPlayer(memoryStream).Play();
