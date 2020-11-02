@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Kalimbra.Instruments;
 
 namespace Kalimbra
 {
@@ -8,6 +9,7 @@ namespace Kalimbra
     {
         public readonly Note[] Notes;
         public int Bpm { get; }
+        public IInstrument Instrument { get; } = new SineInstrument();
 
         public Melody(IEnumerable<Note> notes, int bpm = 100)
         {

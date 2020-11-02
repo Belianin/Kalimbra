@@ -50,12 +50,8 @@ namespace Kalimbra.App
         {
             var durations = new[]
             {
-                NoteDuration.Whole,
-                NoteDuration.Half,
-                NoteDuration.Half,
-                NoteDuration.Quarter,
-                NoteDuration.Quarter,
-                NoteDuration.Quarter,
+                NoteDuration.Eighth,
+                NoteDuration.Eighth,
                 NoteDuration.Quarter
             };
             var generator = new MelodyGenerator(new RandomDurationGenerator(durations: durations));

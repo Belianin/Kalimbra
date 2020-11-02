@@ -78,7 +78,7 @@ namespace Kalimbra
                 var duration = GetNoteDuration(note, melody.Bpm);
                 for (int j = 0; j < duration; j++)
                 {
-                    wave[i] = Convert.ToInt16((short.MaxValue / 2) * Math.Sin(((Math.PI * 2 * note.Frequency) / SAMPLE_RATE) * i)+ short.MaxValue / 2);
+                    wave[i] = melody.Instrument.Play(note.Frequency, i);
                     i++;
                 }
             }
