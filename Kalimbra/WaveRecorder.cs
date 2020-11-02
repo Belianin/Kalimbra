@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Kalimbra.Instruments;
 
 namespace Kalimbra
 {
@@ -13,7 +14,7 @@ namespace Kalimbra
         
         public byte[] Record(BinaryWriter binaryWriter, Melody[] melody)
         {
-            var melodies = melody.Select(GetPayloadBites).ToArray();
+            var melodies = melody.SelectMany(m => m.Notes.Select(n => GetPayloadBites(n, m.Instrument))).ToArray();
             var payload = new long[melodies.Max(m => m.Length)];
             long max = 0;
             for (int i = 0; i < payload.Length; i++)
@@ -60,9 +61,9 @@ namespace Kalimbra
             return normalized;
         }
 
-        private byte[] GetPayloadBites(Melody melody)
+        private byte[] GetPayloadBites(Note[] notes, IInstrument instrument)
         {
-            var wave = PlaySineWave(melody);
+            var wave = PlaySineWave(notes, instrument);
             var binaryWave = new byte[wave.Length * sizeof(short)];
 
             Buffer.BlockCopy(wave, 0, binaryWave, 0, wave.Length * sizeof(short));
@@ -70,14 +71,14 @@ namespace Kalimbra
             return binaryWave;
         }
 
-        private short[] PlaySineWave(Melody melody)
+        private short[] PlaySineWave(Note[] notes, IInstrument instrument)
         {
-            var length = melody.Notes.Sum(n => GetNoteDuration(n, melody.Bpm));
+            var length = notes.Sum(GetNoteDuration);
             var wave = new short[length];
             var i = 0;
-            foreach (var note in melody.Notes)
+            foreach (var note in notes)
             {
-                var result = melody.Instrument.Play(note);
+                var result = instrument.Play(note);
                 for (int j = 0; j < result.Length; j++)
                 {
                     if (i + j >= wave.Length)
@@ -85,13 +86,13 @@ namespace Kalimbra
                     wave[i + j] += Convert.ToInt16(result[j]);
                 }
 
-                i += GetNoteDuration(note, melody.Bpm);;
+                i += GetNoteDuration(note);;
             }
 
             return wave;
         }
 
-        private int GetNoteDuration(Note note, int bpm)
+        private int GetNoteDuration(Note note)
         {
             return SAMPLE_RATE / (int) note.Duration;// * (bpm / 60));
         }

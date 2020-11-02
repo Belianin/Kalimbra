@@ -51,6 +51,10 @@ namespace Kalimbra.App
 
         private void PlayNew()
         {
+            PlayChord();
+            return;
+            
+            
             var durations = new[]
             {
                 NoteDuration.Eighth,
@@ -66,7 +70,7 @@ namespace Kalimbra.App
                 NoteDuration.Quarter
             };
             var bassGenerator = new MelodyGenerator(new RandomDurationGenerator(durations: bassDurations));
-            var bass = bassGenerator.Generate(Gammas.CMaj3, 40);
+            var bass = bassGenerator.GenerateMajChords(Gammas.CMaj3, 40);
 
             //var drums = new MelodyGenerator(new RandomDurationGenerator(durations: new [] {NoteDuration.Whole}))
             //    .Generate(new [] {NoteKey.C2}, 40);
@@ -77,10 +81,19 @@ namespace Kalimbra.App
             
             var wave = recorder.Record(binaryWriter, new [] {melody, bass});
             
-            new WaveVisualiser().Visualize(wave, 800, 600).Save("temp.png", ImageFormat.Png);
+            //new WaveVisualiser().Visualize(wave, 800, 600).Save("temp.png", ImageFormat.Png);
             //memoryStream.Position = 0;
             
             //new SoundPlayer(memoryStream).Play();
+        }
+
+        private void PlayChord()
+        {
+            using var memoryStream = File.OpenWrite("temp.wav");
+            using var binaryWriter = new BinaryWriter(memoryStream);
+            var recorder = new WaveRecorder();
+
+            recorder.Record(binaryWriter, new Melody(Chord.Maj(NoteKey.C3)));
         }
 
         private async Task PlayMelody(CancellationToken token, float frequency, int duration)
