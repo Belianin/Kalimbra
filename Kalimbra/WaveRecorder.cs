@@ -34,12 +34,10 @@ namespace Kalimbra
 
         private byte[] GetPayloadBites(Melody melody)
         {
-            
-            
             var notes = new List<short>();
             foreach (var note in melody.Notes)
             {
-                var duration = SAMPLE_RATE / (int) note.Duration;
+                var duration = SAMPLE_RATE / ((int) note.Duration * (melody.Bpm / 60));
                 var wave = new short[duration];
                 for (int i = 0; i < duration; i++)
                 {
