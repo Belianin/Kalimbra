@@ -10,4 +10,8 @@
       <ProjectReference Include="..\Kalimbra\Kalimbra.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="System.Drawing.Common" Version="4.6.2" />
+    </ItemGroup>
+
 </Project>

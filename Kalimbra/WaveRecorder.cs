@@ -11,7 +11,7 @@ namespace Kalimbra
         private const int SAMPLE_RATE = 44100;
         private const short BITS_PER_SAMPLE = 16;
         
-        public void Record(BinaryWriter binaryWriter, Melody[] melody)
+        public byte[] Record(BinaryWriter binaryWriter, Melody[] melody)
         {
             var melodies = melody.Select(GetPayloadBites).ToArray();
             var payload = new long[melodies.Max(m => m.Length)];
@@ -56,6 +56,8 @@ namespace Kalimbra
             binaryWriter.Write(Encoding.ASCII.GetBytes("data"));
             binaryWriter.Write(subChunkTwoSize);
             binaryWriter.Write(normalized);
+
+            return normalized;
         }
 
         private byte[] GetPayloadBites(Melody melody)
@@ -75,12 +77,15 @@ namespace Kalimbra
             var i = 0;
             foreach (var note in melody.Notes)
             {
-                var duration = GetNoteDuration(note, melody.Bpm);
-                for (int j = 0; j < duration; j++)
+                var result = melody.Instrument.Play(note);
+                for (int j = 0; j < result.Length; j++)
                 {
-                    wave[i] = melody.Instrument.Play(note.Frequency, i);
-                    i++;
+                    if (i + j >= wave.Length)
+                        return wave;
+                    wave[i + j] += Convert.ToInt16(result[j]);
                 }
+
+                i += GetNoteDuration(note, melody.Bpm);;
             }
 
             return wave;

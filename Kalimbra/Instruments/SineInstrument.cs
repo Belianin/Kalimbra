@@ -7,11 +7,22 @@ namespace Kalimbra.Instruments
         private short volume = short.MaxValue / 2;
         private double SAMPLE_RATE = 44100d; // хм, зачем?
         
-        public short Play(float frequency, int time)
+        public double[] Play(Note note)
         {
-            return Convert.ToInt16(
-                volume * Math.Sin(((Math.PI * 2 * time) / SAMPLE_RATE) * frequency) +
-                volume);
+            var duration = GetNoteDuration(note);
+            var wave = new double[duration];
+            for (int i = 0; i < duration; i++)
+            {
+                wave[i] = volume * Math.Sin(((Math.PI * 2 * i) / SAMPLE_RATE) * note.Frequency) +
+                          volume;
+            }
+
+            return wave;
+        }
+        
+        private int GetNoteDuration(Note note)
+        {
+            return (int) SAMPLE_RATE / (int) note.Duration;
         }
     }
 }

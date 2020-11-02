@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Media;
@@ -15,7 +16,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Kalimbra.App.Visualisation;
 using Microsoft.Win32.SafeHandles;
+using Image = System.Drawing.Image;
 
 namespace Kalimbra.App
 {
@@ -51,26 +54,30 @@ namespace Kalimbra.App
             var durations = new[]
             {
                 NoteDuration.Eighth,
-                NoteDuration.Eighth,
-                NoteDuration.Quarter
+                NoteDuration.Quarter,
             };
             var generator = new MelodyGenerator(new RandomDurationGenerator(durations: durations));
-            var melody = generator.Generate(Gammas.CMaj5, 40);
+            var melody = generator.Generate(Gammas.CMaj5, 80);
 
             var bassDurations = new[]
             {
-                NoteDuration.Whole,
                 NoteDuration.Half,
                 NoteDuration.Half,
+                NoteDuration.Quarter
             };
             var bassGenerator = new MelodyGenerator(new RandomDurationGenerator(durations: bassDurations));
-            var bass = bassGenerator.Generate(Gammas.CMaj2, 40);
+            var bass = bassGenerator.Generate(Gammas.CMaj3, 40);
 
+            //var drums = new MelodyGenerator(new RandomDurationGenerator(durations: new [] {NoteDuration.Whole}))
+            //    .Generate(new [] {NoteKey.C2}, 40);
+            
             using var memoryStream = File.OpenWrite("temp.wav");
             using var binaryWriter = new BinaryWriter(memoryStream);
             var recorder = new WaveRecorder();
             
-            recorder.Record(binaryWriter, new [] {melody, bass});
+            var wave = recorder.Record(binaryWriter, new [] {melody, bass});
+            
+            new WaveVisualiser().Visualize(wave, 800, 600).Save("temp.png", ImageFormat.Png);
             //memoryStream.Position = 0;
             
             //new SoundPlayer(memoryStream).Play();

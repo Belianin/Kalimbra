@@ -9,7 +9,7 @@ namespace Kalimbra
     {
         public readonly Note[] Notes;
         public int Bpm { get; }
-        public IInstrument Instrument { get; } = new SineInstrument();
+        public IInstrument Instrument { get; } = new FadeInInstrument(new SineInstrument());
 
         public Melody(IEnumerable<Note> notes, int bpm = 100)
         {
