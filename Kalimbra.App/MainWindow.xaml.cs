@@ -79,7 +79,7 @@ namespace Kalimbra.App
             using var binaryWriter = new BinaryWriter(memoryStream);
             var recorder = new WaveRecorder();
             
-            var wave = recorder.Record(binaryWriter, new [] {melody, bass});
+            //var wave = recorder.Record(binaryWriter, new [] {melody, bass});
             
             //new WaveVisualiser().Visualize(wave, 800, 600).Save("temp.png", ImageFormat.Png);
             //memoryStream.Position = 0;
@@ -87,13 +87,51 @@ namespace Kalimbra.App
             //new SoundPlayer(memoryStream).Play();
         }
 
+        private Melody[] GetMelody()
+        {
+            var durations = new[]
+            {
+                NoteDuration.Eighth,
+                NoteDuration.Quarter,
+            };
+            var generator = new MelodyGenerator(new RandomDurationGenerator(durations: durations));
+            var melody = generator.Generate(Gammas.CMaj5, 600);
+
+            var bassDurations = new[]
+            {
+                NoteDuration.Half,
+                NoteDuration.Half,
+                NoteDuration.Quarter
+            };
+            var bassGenerator = new MelodyGenerator(new RandomDurationGenerator(durations: bassDurations));
+            var bass = bassGenerator.GenerateMajChords(Gammas.CMaj3, 200);
+
+            var drums = new MelodyGenerator(new RandomDurationGenerator(durations: new [] {NoteDuration.Whole}))
+                .Generate(new [] {NoteKey.C2}, 100);
+            
+            var synth = new MelodyGenerator(new RandomDurationGenerator(durations: new []
+                {
+                    NoteDuration.Eighth
+                }))
+                .Generate(Gammas.CMaj4, 800);
+
+            return new[] {melody, bass, synth};
+        }
+
         private void PlayChord()
         {
-            using var memoryStream = File.OpenWrite("temp.wav");
-            using var binaryWriter = new BinaryWriter(memoryStream);
             var recorder = new WaveRecorder();
 
-            recorder.Record(binaryWriter, new Melody(Chord.Maj(NoteKey.C3)));
+            var melody = GetMelody();//new Melody(Chord.Maj(NoteKey.C3));
+            var wav = new WaveFile
+            {
+                Wave = recorder.ToBytes(melody)
+            };
+            
+            using var stream = File.OpenWrite("chord.wav");
+            recorder.Record(stream, wav);
+            
+            new WaveVisualiser().Visualize(wav.Wave, 800, 600).Save("chord.png", ImageFormat.Png);
         }
 
         private async Task PlayMelody(CancellationToken token, float frequency, int duration)

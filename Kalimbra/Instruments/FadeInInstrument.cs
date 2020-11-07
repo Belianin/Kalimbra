@@ -10,12 +10,12 @@ namespace Kalimbra.Instruments
             this.instrument = instrument;
         }
 
-        public double[] Play(Note note)
+        public int[] Play(Note note)
         {
             var wave = instrument.Play(note);
             for (int i = 0; i < duration; i++)
             {
-                wave[i] *= i / (double) duration;
+                wave[i] *= (int) (i / (double) duration);
             }
 
             return wave;

@@ -10,71 +10,65 @@ namespace Kalimbra
     public class WaveRecorder
     {
         private const int SAMPLE_RATE = 44100;
-        private const short BITS_PER_SAMPLE = 16;
-        
-        public byte[] Record(BinaryWriter binaryWriter, Melody[] melody)
+        public int[] ToBytes(Melody[] melody)
         {
-            var melodies = melody.SelectMany(m => m.Notes.Select(n => GetPayloadBites(n, m.Instrument))).ToArray();
+            var melodies = melody.SelectMany(m => m.Notes.Select(n => PlaySineWave(n, m.Instrument))).ToArray();
             var payload = new long[melodies.Max(m => m.Length)];
             long max = 0;
             for (int i = 0; i < payload.Length; i++)
             {
-                //var count = 0;
-                var l = 0L;
+                long l = 0;
                 foreach (var m in melodies)
                 {
                     if (i < m.Length)
                     {
-                        //count++;
                         l += m[i];
                     }
                 }
                 
                 if (l > max)
                     max = l;
-                payload[i] = l; //(l / count);
+                payload[i] = l;
             }
 
-            var normalized = new byte[payload.Length];
+            var normalized = new int[payload.Length];
             for (int i = 0; i < payload.Length; i++)
             {
-                normalized[i] = (byte) (payload[i] * (payload[i] / (double) max));
+                normalized[i] = (int) payload[i]; // * (payload[i] / (double) max)) * (int.MaxValue));
             }
-            
-            var blockAlign = BITS_PER_SAMPLE / 8;
-            var subChunkTwoSize = blockAlign * normalized.Length;
 
+            return normalized;
+        }
+        
+        public void Record(Stream stream, WaveFile wave)
+        {
+            var blockAlign = wave.BitsPerSample / 8; // количество байт на семпл с учетом всех каналов
+            var subChunkTwoSize = blockAlign * wave.Wave.Length; // длинна данных
+
+            var result = wave.Wave.SelectMany(BitConverter.GetBytes).ToArray();
+            //var result = new byte[wave.Wave.Length * sizeof(int)];
+            //Buffer.BlockCopy(wave.Wave, 0, result, 0, result.Length);
+
+            using var binaryWriter = new BinaryWriter(stream, Encoding.ASCII, true);
             binaryWriter.Write(Encoding.ASCII.GetBytes("RIFF"));
             binaryWriter.Write(36 + subChunkTwoSize);
             binaryWriter.Write(Encoding.ASCII.GetBytes("WAVEfmt "));
             binaryWriter.Write(16);
-            binaryWriter.Write((short) 1);
-            binaryWriter.Write((short) 1);
-            binaryWriter.Write(SAMPLE_RATE);
-            binaryWriter.Write(SAMPLE_RATE * blockAlign);
+            binaryWriter.Write((short) 1); // линейное квантование
+            binaryWriter.Write((short) 1); // моно
+            binaryWriter.Write(wave.SampleRate);
+            binaryWriter.Write(wave.SampleRate * blockAlign); // количество данных в секунду
             binaryWriter.Write((short) blockAlign);
-            binaryWriter.Write((short) BITS_PER_SAMPLE);
+            binaryWriter.Write((short) wave.BitsPerSample);
             binaryWriter.Write(Encoding.ASCII.GetBytes("data"));
             binaryWriter.Write(subChunkTwoSize);
-            binaryWriter.Write(normalized);
-
-            return normalized;
+            binaryWriter.Write(result);
         }
 
-        private byte[] GetPayloadBites(Note[] notes, IInstrument instrument)
-        {
-            var wave = PlaySineWave(notes, instrument);
-            var binaryWave = new byte[wave.Length * sizeof(short)];
-
-            Buffer.BlockCopy(wave, 0, binaryWave, 0, wave.Length * sizeof(short));
-
-            return binaryWave;
-        }
-
-        private short[] PlaySineWave(Note[] notes, IInstrument instrument)
+        private int[] PlaySineWave(Note[] notes, IInstrument instrument)
         {
             var length = notes.Sum(GetNoteDuration);
-            var wave = new short[length];
+            var wave = new int[length];
             var i = 0;
             foreach (var note in notes)
             {
@@ -83,7 +77,7 @@ namespace Kalimbra
                 {
                     if (i + j >= wave.Length)
                         return wave;
-                    wave[i + j] += Convert.ToInt16(result[j]);
+                    wave[i + j] += Convert.ToInt32(result[j]);
                 }
 
                 i += GetNoteDuration(note);;

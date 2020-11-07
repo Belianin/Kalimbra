@@ -4,17 +4,16 @@ namespace Kalimbra.Instruments
 {
     public class SineInstrument : IInstrument
     {
-        private short volume = short.MaxValue / 2;
+        private int volume = int.MaxValue / 4;
         private double SAMPLE_RATE = 44100d; // хм, зачем?
         
-        public double[] Play(Note note)
+        public int[] Play(Note note)
         {
             var duration = GetNoteDuration(note);
-            var wave = new double[duration];
+            var wave = new int[duration];
             for (int i = 0; i < duration; i++)
             {
-                wave[i] = volume * Math.Sin(((Math.PI * 2 * i) / SAMPLE_RATE) * note.Frequency) +
-                          volume;
+                wave[i] = (int) (volume * Math.Sin(((Math.PI * 2 * i) / SAMPLE_RATE) * note.Frequency));
             }
 
             return wave;
