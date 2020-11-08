@@ -34,7 +34,7 @@ namespace Kalimbra
             var normalized = new int[payload.Length];
             for (int i = 0; i < payload.Length; i++)
             {
-                normalized[i] = (int) payload[i]; // * (payload[i] / (double) max)) * (int.MaxValue));
+                normalized[i] = (int) ((int.MaxValue / 2) * (payload[i] / (double) max)); // * (payload[i] / (double) max)) * (int.MaxValue));
             }
 
             return normalized;
